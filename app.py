@@ -1,83 +1,142 @@
-SALES_PROMPTS = {
+import streamlit as st
 
-    "PragyanAI Student Counselor": """
-You are Aarav, an Academic & Career Advisor for PragyanAI.
+from chatbot import (
+    ask_question,
+    initialize_chat,
+    display_chat,
+    add_user_message,
+    add_assistant_message
+)
 
-Your primary goal is to help prospective students understand the PragyanAI 18-Month AI & Generative AI Program and encourage enrollment.
-
-Strict Rule:
-Answer ONLY using the retrieved context.
-If the information is not available in the context, politely reply:
-"I couldn't find that information in the available PragyanAI documents."
-
-Retrieved Context:
-{context}
-
-Guidelines:
-- Be friendly and encouraging.
-- Explain concepts in simple language.
-- Highlight benefits such as:
-    • 6 Months Offline Training
-    • 12 Months Internship & Placement
-    • Live Projects
-    • 48-hour Hackathons
-    • Industry Mentorship
-    • Risk-shared pricing
-- Never invent prices or curriculum.
-""",
+from rag import update_knowledge_base
 
 
-    "PragyanAI Institutional / CoE Advisor": """
-You are Dr. Kavita,
-Institutional Relations Lead at PragyanAI.
+# -------------------------------------------------------
+# Page Config
+# -------------------------------------------------------
 
-Your job is to explain how PragyanAI collaborates with engineering colleges.
-
-Strict Rule:
-Use ONLY the retrieved context.
-
-If the answer is unavailable, say:
-"I couldn't find that information in the available documents."
-
-Retrieved Context:
-{context}
-
-Guidelines:
-- Maintain a professional tone.
-- Focus on:
-    • Industry readiness
-    • Skill transformation
-    • Multi-track career pathways
-    • Seminars
-    • Hackathons
-    • Project-based learning
-""",
+st.set_page_config(
+    page_title="PragyanAI AI Counsellor",
+    page_icon="🤖",
+    layout="wide"
+)
 
 
-    "PragyanAI Enterprise AI & Placement Lead": """
-You are Rohan,
-Enterprise AI & Placement Lead at PragyanAI.
+# -------------------------------------------------------
+# Header
+# -------------------------------------------------------
 
-Your role is to answer companies looking to hire students or build AI solutions.
+st.title("🤖 PragyanAI AI Counsellor")
 
-Strict Rule:
-Use ONLY the retrieved context.
-
-If the answer is unavailable, politely say so.
-
-Retrieved Context:
-{context}
-
-Guidelines:
-- Professional tone.
-- Emphasize:
-    • AI Engineers
-    • GenAI Engineers
-    • Agentic AI
-    • RAG
-    • LangChain
-    • CrewAI
-    • AutoGen
-    • Production-ready projects
+st.markdown(
 """
-}
+Ask anything about:
+
+- 📘 AI Program
+- 💰 Fees
+- 🎯 Placements
+- 📚 Curriculum
+- 🏫 College Partnerships
+- 💼 Enterprise Hiring
+"""
+)
+
+
+# -------------------------------------------------------
+# Sidebar
+# -------------------------------------------------------
+
+st.sidebar.title("Settings")
+
+
+persona = st.sidebar.selectbox(
+
+    "Choose AI Persona",
+
+    [
+
+        "PragyanAI Student Counselor",
+
+        "PragyanAI Institutional / CoE Advisor",
+
+        "PragyanAI Enterprise AI & Placement Lead"
+
+    ]
+
+)
+
+
+uploaded_files = st.sidebar.file_uploader(
+
+    "Upload PDF / Excel",
+
+    type=["pdf", "xlsx", "xls"],
+
+    accept_multiple_files=True
+
+)
+
+
+if st.sidebar.button("Update Knowledge Base"):
+
+    if uploaded_files:
+
+        msg = update_knowledge_base(uploaded_files)
+
+        st.sidebar.success(msg)
+
+    else:
+
+        st.sidebar.warning("Upload at least one file.")
+
+
+# -------------------------------------------------------
+# Chat
+# -------------------------------------------------------
+
+initialize_chat()
+
+display_chat()
+
+
+question = st.chat_input("Ask a question...")
+
+
+if question:
+
+    add_user_message(question)
+
+    with st.chat_message("user"):
+
+        st.markdown(question)
+
+
+    with st.chat_message("assistant"):
+
+        with st.spinner("Thinking..."):
+
+            answer = ask_question(
+
+                persona,
+
+                question
+
+            )
+
+            st.markdown(answer)
+
+
+    add_assistant_message(answer)
+
+
+# -------------------------------------------------------
+# Footer
+# -------------------------------------------------------
+
+st.divider()
+
+st.caption(
+
+    "Powered by LangChain • FAISS • HuggingFace • Groq • Streamlit"
+
+)
